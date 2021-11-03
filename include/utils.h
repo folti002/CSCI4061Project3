@@ -34,8 +34,8 @@ FILE * getFilePointer(char *inputFileName);
  * @param  *line  contain the line content
  * @param  len    the size of the line
  * @return the number of character reads (including the newline \n, but not including terminator)
-           -1 when reaching the end of file or error occurs
- */
+         -1 when reaching the end of file or error occurs
+  */
 ssize_t getLineFromFile(FILE *fp, char *line, size_t len);
 
 /**

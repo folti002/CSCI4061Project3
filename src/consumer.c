@@ -1,17 +1,22 @@
+/* test machine: csel-kh1250-01.cselabs.umn.edu 
+ * group number: G[27] 
+ * name: Reed Fazenbaker, Mikkel Folting
+ * x500: fazen007, folti002
+*/
+
 #include "consumer.h"
 #include <ctype.h>
 
 /**
- * parse lines from the queue, calculate balance change
+ * Parse lines from the queue, calculate balance change
  * and update to global array
  */
 void parse(char *line){
-    
-    // TODO: get customer id
+	// TODO: Get customer id
 
-    // TODO: sum up transactions
+	// TODO: Sum up transactions
 
-    // TODO: update the global array
+	// TODO: Update the global array
 
 
 }
@@ -19,14 +24,14 @@ void parse(char *line){
 
 // consumer function
 void *consumer(void *arg){
-    
-    //TODO: keep reading from queue and process the data
-    // feel free to change
-    while(1){
-        //parse();
-    }
-    
-    return NULL; 
+	
+	// TODO: Keep reading from queue and process the data
+	// Feel free to change
+	while(1){
+			//parse();
+	}
+	
+	return NULL; 
 }
 
 
