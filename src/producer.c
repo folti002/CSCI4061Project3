@@ -28,15 +28,13 @@ void *producer(void *arg){
 
   // Read file line by line and send data to the shared queue
   char curLine[chunkSize];
-  packet* temp = head->next;
+  packet* temp = head;
   while(getLineFromFile(fp, curLine, chunkSize) != -1){
-    packet* newNode = (packet*) malloc(sizeof(struct packet*));
+    packet* newNode = (packet*) malloc(sizeof(packet));
     newNode->transactions = curLine;
     newNode->next = NULL;
-    while(temp != NULL){
-      temp = temp->next;
-    }
     temp->next = newNode;
+    temp = newNode;
   }
 
   printLinkedList(head);
