@@ -23,12 +23,13 @@ void parse(char *line){
 
 // consumer function
 void *consumer(void *arg){
-	
+	int consumerID = *(int*) arg;
+	printf("consumer %d\n", consumerID);
 	// TODO: Keep reading from queue and process the data
 	// Feel free to change
-	while(1){
-			//parse();
-	}
+	// while(1){
+	// 		//parse();
+	// }
 	
 	return NULL; 
 }
