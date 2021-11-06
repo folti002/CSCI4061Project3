@@ -55,8 +55,8 @@ int main(int argc, char *argv[]){
 	// TODO: Initialize global variables, like shared queue
 
 	// Initialize shared data queue
-	// head = (packet*) malloc(sizeof(packet));
-	// head->next = NULL;
+	head = (packet*) malloc(sizeof(packet));
+	head->next = NULL;
 
 	// Initialize balance array to all zeroes
 	for(int i = 0; i < acctsNum; i++){
@@ -65,23 +65,19 @@ int main(int argc, char *argv[]){
 	
 	// Create producer thread
 	pthread_t producer_tid;
-	printf("launching producer\n");
 	if(pthread_create(&producer_tid, NULL, producer, (void*) inputFile) != 0){
 		printf("Producer thread failed to create\n");
 	}
-	//printf("Producer thread created successfully\n");
+	printf("Producer thread created successfully\n");
 
 	// Create consumer threads
-	//pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
-	pthread_t tids[3];
-	int arg_arr[3];
-	for(int i = 0; i < 3; i++){
-		arg_arr[i] = i;
+	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
+	for(int i = 0; i < numConsumers; i++){
+		consumer_tids[i] = i;
 	}
-	for(int i = 0; i < 3; i++){
-		//if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) i) != 0){
-		printf("launching consumer %d\n", i);
-		if(pthread_create(&(tids[i]), NULL, consumer, (void*) &arg_arr[i])){
+
+	for(int i = 0; i < numConsumers; i++){
+		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &(consumer_tids[i])) != 0){
 			printf("Consumer thread %d failed to create\n", i);
 		}
 		//printf("Consumer thread %d created successfully\n", i);
@@ -91,25 +87,25 @@ int main(int argc, char *argv[]){
 	pthread_join(producer_tid, NULL);
 
 	// Wait for consumer threads to complete
-	for(int i = 0; i < 3; i++) {
+	for(int i = 0; i < numConsumers; i++) {
 		//pthread_join(consumer_tids[i], NULL);
-		pthread_join(tids[i], NULL);
+		pthread_join(consumer_tids[i], NULL);
 	}
 	
 	// Write the final output
 	writeBalanceToFiles();
 
 	// Free malloc'd variables
-	//free(consumer_tids);
+	free(consumer_tids);
 
 	// Free shared queue
-	// packet* temp = head->next;
-	// packet* behind = head;
-	// while(temp != NULL){
-	// 	temp = temp->next;
-	// 	free(behind);
-	// 	behind = temp;
-	// }
+	packet* temp = head->next;
+	packet* behind = head;
+	while(temp != NULL){
+		temp = temp->next;
+		free(behind);
+		behind = temp;
+	}
 	
 	return 0; 
 }
