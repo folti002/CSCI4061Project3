@@ -18,7 +18,6 @@ void parse(char *line){
 
 	// TODO: Update the global array
 
-
 }
 
 
