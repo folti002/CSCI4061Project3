@@ -24,14 +24,36 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "Usage ./bank [number of consumers] [input file]\n");
 		exit(EXIT_FAILURE);
 	}
+	int numConsumers = argv[1];
+	char* inputFile = argv[2];
 
 	bookeepingCode();
 	
 	// TODO: Initialize global variables, like shared queue
 	
-	// TODO: Create producer and consumer threads
+	// Create producer thread
+	pthread_t producer_tid;
+	if(pthread_create(&producer_tid, NULL, producer, (void*) inputFile) != 0){
+		printf("Producer thread failed to create\n");
+	}
+	printf("Producer thread created successfully\n");
 
-	// TODO: Wait for all threads to complete execution
+	// Create consumer threads
+	pthread_t consumer_tids[numConsumers];
+	for(int i = 0; i < numConsumers; i++){
+		if(pthread_create(&(consumer_tids[i]), NULL, consumer, NULL) != 0){
+			printf("Consumer thread %d failed to create\n", i);
+		}
+		printf("Consumer thread %d created successfully\n", i);
+	}
+
+	// Wait for producer thread to complete
+	pthread_join(producer_tid, NULL);
+
+	// Wait for consumer threads to complete
+	for(i = 0; i < numConsumers; i++) {
+		pthread_join(consumer_tids[i], NULL);
+	}
 	
 	// Write the final output
 	writeBalanceToFiles();

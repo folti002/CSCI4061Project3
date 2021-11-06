@@ -14,8 +14,12 @@
 void *producer(void *arg){
   // TODO: Open the file and read its content line by line
 
-  // Get file to read from arg passed into this method
+  // Get file to read and open it
   char* inputFile = (char*) arg;
+  FILE* fp = fopen(inputFile, "r");
+  if(fp == NULL){
+    fprintf(stderr, "Failed to open file in producer: %s\n", inputFile);
+  }
 
   // Send data to the shared queue
   // When reaching the end of the file, send EOF message
