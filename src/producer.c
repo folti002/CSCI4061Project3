@@ -20,24 +20,26 @@ void printLinkedList(packet* head){
  */
 void *producer(void *arg){
   // Get file to read and open it
-  char* inputFile = (char*) arg;
-  FILE* fp = fopen(inputFile, "r");
-  if(fp == NULL){
-    fprintf(stderr, "Failed to open file in producer: %s\n", inputFile);
-  }
+  // char* inputFile = (char*) arg;
+  // FILE* fp = fopen(inputFile, "r");
+  // if(fp == NULL){
+  //   fprintf(stderr, "Failed to open file in producer: %s\n", inputFile);
+  // }
 
-  // Read file line by line and send data to the shared queue
-  char curLine[chunkSize];
-  packet* temp = head;
-  while(getLineFromFile(fp, curLine, chunkSize) != -1){
-    packet* newNode = (packet*) malloc(sizeof(packet));
-    newNode->transactions = curLine;
-    newNode->next = NULL;
-    temp->next = newNode;
-    temp = newNode;
-  }
+  // // Read file line by line and send data to the shared queue
+  // char curLine[chunkSize];
+  // packet* temp = head;
+  // while(getLineFromFile(fp, curLine, chunkSize) != -1){
+  //   packet* newNode = (packet*) malloc(sizeof(packet));
+  //   newNode->transactions = curLine;
+  //   newNode->next = NULL;
+  //   temp->next = newNode;
+  //   temp = newNode;
+  // }
 
-  printLinkedList(head);
+  // printLinkedList(head);
+
+  printf("producer\n");
 
   // Send data to the shared queue
   // When reaching the end of the file, send EOF message
