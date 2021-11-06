@@ -6,6 +6,11 @@
 
 #include "header.h"
 
+packet* head;
+int runOption;
+int queueSize;
+double balance[acctsNum];
+
 /**
  * Write final balance to a single file.
  * The path name should be output/result.txt
@@ -20,16 +25,43 @@ void writeBalanceToFiles(void) {
 
 int main(int argc, char *argv[]){
 	//TODO: Argument check
-	if(argc != 3){
-		fprintf(stderr, "Usage ./bank [number of consumers] [input file]\n");
+	if(argc != 3 && argc != 5){
+		fprintf(stderr, "Usage ./bank [number of consumers] [input file]\nOR\nUsage ./bank [number of consmers] [inputFile] [option] [queue size]\n");
 		exit(EXIT_FAILURE);
 	}
-	int numConsumers = argv[1];
+	int numConsumers = atoi(argv[1]);
 	char* inputFile = argv[2];
+
+	// Set run option to the approprate value based on argument inputted
+	// Additionally, store the inputted queue size in the extern variable
+	if(argc == 5){
+		char* option = argv[3];
+		if(strcmp(option, "-p") == 0){
+			runOption = 1;
+		} else if(strcmp(option, "-b") == 0){
+			runOption = 2;
+		} else if(strcmp(option, "-bp") == 0){
+			runOption = 3;
+		} else {
+			fprintf(stderr, "ERROR: Invalid option inputted\n");
+			exit(EXIT_FAILURE);
+		}
+		queueSize = atoi(argv[4]);
+	}
 
 	bookeepingCode();
 	
 	// TODO: Initialize global variables, like shared queue
+
+	// Initialize shared data queue
+	head->next = NULL;
+
+	printf("hi\n");
+
+	// Initialize balance array to all zeroes
+	for(int i = 0; i < acctsNum; i++){
+		balance[i] = 0;
+	}
 	
 	// Create producer thread
 	pthread_t producer_tid;
@@ -39,24 +71,27 @@ int main(int argc, char *argv[]){
 	printf("Producer thread created successfully\n");
 
 	// Create consumer threads
-	pthread_t consumer_tids[numConsumers];
+	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
 	for(int i = 0; i < numConsumers; i++){
 		if(pthread_create(&(consumer_tids[i]), NULL, consumer, NULL) != 0){
 			printf("Consumer thread %d failed to create\n", i);
 		}
-		printf("Consumer thread %d created successfully\n", i);
+		//printf("Consumer thread %d created successfully\n", i);
 	}
 
 	// Wait for producer thread to complete
 	pthread_join(producer_tid, NULL);
 
 	// Wait for consumer threads to complete
-	for(i = 0; i < numConsumers; i++) {
+	for(int i = 0; i < numConsumers; i++) {
 		pthread_join(consumer_tids[i], NULL);
 	}
 	
 	// Write the final output
 	writeBalanceToFiles();
+
+	// Free malloc'd
+	free(consumer_tids);
 	
 	return 0; 
 }

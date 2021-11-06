@@ -50,5 +50,16 @@ void bookeepingCode();
 
 /* other function declaration */
 
+/* packet struct definition */
+typedef struct packet {
+  char* transactions;
+  struct packet* next;
+} packet;
+
+extern packet* head;
+
+/* Additional global shared variables */
+extern int runOption;
+extern int queueSize;
 
 #endif
