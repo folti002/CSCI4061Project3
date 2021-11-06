@@ -40,13 +40,14 @@ int main(int argc, char *argv[]){
 			runOption = 1;
 		} else if(strcmp(option, "-b") == 0){
 			runOption = 2;
+			queueSize = atoi(argv[4]);
 		} else if(strcmp(option, "-bp") == 0){
 			runOption = 3;
+			queueSize = atoi(argv[4]);
 		} else {
 			fprintf(stderr, "ERROR: Invalid option inputted\n");
 			exit(EXIT_FAILURE);
 		}
-		queueSize = atoi(argv[4]);
 	}
 
 	bookeepingCode();
@@ -54,9 +55,8 @@ int main(int argc, char *argv[]){
 	// TODO: Initialize global variables, like shared queue
 
 	// Initialize shared data queue
+	head = (packet*) malloc(sizeof(packet));
 	head->next = NULL;
-
-	printf("hi\n");
 
 	// Initialize balance array to all zeroes
 	for(int i = 0; i < acctsNum; i++){
@@ -68,15 +68,17 @@ int main(int argc, char *argv[]){
 	if(pthread_create(&producer_tid, NULL, producer, (void*) inputFile) != 0){
 		printf("Producer thread failed to create\n");
 	}
-	printf("Producer thread created successfully\n");
+	//printf("Producer thread created successfully\n");
+	printf("launching producer/n");
 
 	// Create consumer threads
-	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
-	for(int i = 0; i < numConsumers; i++){
+	//pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
+	for(int i = 0; i < 3; i++){
 		if(pthread_create(&(consumer_tids[i]), NULL, consumer, NULL) != 0){
 			printf("Consumer thread %d failed to create\n", i);
 		}
 		//printf("Consumer thread %d created successfully\n", i);
+		printf("launching consumer %d\n", i);
 	}
 
 	// Wait for producer thread to complete
@@ -90,8 +92,17 @@ int main(int argc, char *argv[]){
 	// Write the final output
 	writeBalanceToFiles();
 
-	// Free malloc'd
+	// Free malloc'd variables
 	free(consumer_tids);
+
+	// Free shared queue
+	packet* temp = head->next;
+	packet* behind = head;
+	while(temp != NULL){
+		temp = temp->next;
+		free(behind);
+		behind = temp;
+	}
 	
 	return 0; 
 }
