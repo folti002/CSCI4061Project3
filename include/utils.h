@@ -65,6 +65,7 @@ extern int queueSize;
 
 extern FILE* logFile;
 
-extern pthread_mutex_t  mutex;
+extern pthread_mutex_t sharedQueueLock;
+extern pthread_cond_t cond;
 
 #endif

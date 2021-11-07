@@ -8,18 +8,27 @@
 #include <ctype.h>
 
 FILE* logFile;
+pthread_mutex_t sharedQueueLock;
+pthread_cond_t cond;
 
 /**
  * Parse lines from the queue, calculate balance change
  * and update to global array
  */
 void parse(char *line){
-	// TODO: Get customer id
+	// Get customer ID
+	int id = atoi(strtok(line, ","));
+	printf("id: %d\n", id);
 
 	// TODO: Sum up transactions
+	double balanceChange = 0.0;
+	char* token = strtok(NULL, ",");
+	while(token != NULL){
+		balanceChange += strtod(token, NULL);
+	}
 
-	// TODO: Update the global array
-
+	// Update the global array
+	balance[id] = balanceChange;
 }
 
 
@@ -30,12 +39,16 @@ void *consumer(void *arg){
 		fprintf(logFile, "consumer %d\n", consumerID);
     fflush(logFile);
 	}
-
+	
 	// TODO: Keep reading from queue and process the data
-	// Feel free to change
-	// while(1){
-	// 		//parse();
-	// }
+	pthread_mutex_lock(&sharedQueueLock);
+	packet* temp = head->next;
+	while(temp == NULL){
+		pthread_cond_wait(&cond, &sharedQueueLock);
+	}
+	parse(temp->transactions);
+	pthread_mutex_unlock(&sharedQueueLock);
+
 	
 	return NULL; 
 }

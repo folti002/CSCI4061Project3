@@ -12,6 +12,9 @@ int queueSize;
 double balance[acctsNum];
 FILE* logFile;
 
+pthread_mutex_t sharedQueueLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
 /**
  * Write final balance to a single file.
  * The path name should be output/result.txt
@@ -33,17 +36,18 @@ void writeBalanceToFiles(void) {
 int main(int argc, char *argv[]){
 	bookeepingCode();
 
-	// If the argument count isn't between 3 and 5, exit the program
+	// If the argument count isn't between 3 and 5, let user know and exit the program
 	if(argc < 3 || argc > 5){
 		fprintf(stderr, "Usage ./bank [number of consumers] [input file]\nOR\nUsage ./bank [number of consmers] [inputFile] [option] [queue size]\n");
 		exit(EXIT_FAILURE);
 	}
+
 	// Store number of consumers and the input file to use
 	int numConsumers = atoi(argv[1]);
 	char* inputFile = argv[2];
 
 	// Set run option to the approprate value based on argument inputted
-	// Additionally, store the inputted queue size in the extern variable
+	// Additionally, store the inputted queue size in the extern variable if specified
 	if(argc == 4){
 		char* option = argv[3];
 		if(strcmp(option, "-p") == 0){
@@ -68,13 +72,10 @@ int main(int argc, char *argv[]){
 	} else {
 		runOption = 0;
 	}
-	
-	// TODO: Initialize global variables, like shared queue
 
 	// Initialize shared data queue
 	head = (packet*) malloc(sizeof(packet));
 	head->next = NULL;
-	//printf("mem address of head in main: %p\n", head);
 
 	// Initialize balance array to all zeroes
 	for(int i = 0; i < acctsNum; i++){
@@ -128,7 +129,6 @@ int main(int argc, char *argv[]){
 		free(behind);
 		behind = temp;
 	}
-	free(behind->transactions);
 	free(behind);
 	
 	return 0; 

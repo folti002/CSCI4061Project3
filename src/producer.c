@@ -7,13 +7,14 @@
 #include "producer.h"
 
 FILE* logFile;
+pthread_mutex_t sharedQueueLock;
+pthread_cond_t cond;
 
+// Helper method to check if linked list holds the correct information
 void printLinkedList(packet* head){
   packet* temp = head->next;
-  int counter = 1;
   while(temp != NULL){
     printf("%s", temp->transactions);
-    counter++;
     temp = temp->next;
   }
 }
@@ -38,19 +39,23 @@ void *producer(void *arg){
 
   // Read file line by line and send data to the shared queue
   char curLine[chunkSize];
-
   packet* temp = head;
-  //printf("mem address of head in producer: %p\n", temp);
   int counter = 0;
   while(getLineFromFile(fp, curLine, chunkSize) != -1){
     packet* newNode = (packet*) malloc(sizeof(packet));
     newNode->transactions = (char*) malloc(chunkSize);
     strcpy(newNode->transactions, curLine);
     newNode->next = NULL;
+    
+    // Lock before directly accessing the shared queue
+    pthread_mutex_lock(&sharedQueueLock);
     temp->next = newNode;
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&sharedQueueLock);
+
     temp = newNode;
 
-    // Write to log file
+    // Write progress of producer to log file
     if(runOption == 1 || runOption == 3){
 		  fprintf(logFile, "producer: line %d\n", counter);
       fflush(logFile);
