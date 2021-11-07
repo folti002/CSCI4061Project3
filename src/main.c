@@ -24,11 +24,14 @@ void writeBalanceToFiles(void) {
 }
 
 int main(int argc, char *argv[]){
-	//TODO: Argument check
-	if(argc != 3 && argc != 5){
+	bookeepingCode();
+
+	// If the argument count isn't between 3 and 5, exit the program
+	if(argc < 3 || argc > 5){
 		fprintf(stderr, "Usage ./bank [number of consumers] [input file]\nOR\nUsage ./bank [number of consmers] [inputFile] [option] [queue size]\n");
 		exit(EXIT_FAILURE);
 	}
+	// Store number of consumers and the input file to use
 	int numConsumers = atoi(argv[1]);
 	char* inputFile = argv[2];
 
@@ -38,6 +41,7 @@ int main(int argc, char *argv[]){
 		char* option = argv[3];
 		if(strcmp(option, "-p") == 0){
 			runOption = 1;
+			FILE* fp = fopen("output/log.txt", "w");
 		} else if(strcmp(option, "-b") == 0){
 			runOption = 2;
 			queueSize = atoi(argv[4]);
@@ -48,9 +52,9 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "ERROR: Invalid option inputted\n");
 			exit(EXIT_FAILURE);
 		}
+	} else {
+		runOption = 0;
 	}
-
-	bookeepingCode();
 	
 	// TODO: Initialize global variables, like shared queue
 
@@ -77,7 +81,7 @@ int main(int argc, char *argv[]){
 	}
 
 	for(int i = 0; i < numConsumers; i++){
-		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &(consumer_tids[i])) != 0){
+		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &consumer_tids[i]) != 0){
 			printf("Consumer thread %d failed to create\n", i);
 		}
 		//printf("Consumer thread %d created successfully\n", i);
