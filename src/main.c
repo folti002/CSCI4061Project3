@@ -106,8 +106,7 @@ int main(int argc, char *argv[]){
 	pthread_join(producer_tid, NULL);
 
 	// Wait for consumer threads to complete
-	for(int i = 0; i < numConsumers; i++) {
-		//pthread_join(consumer_tids[i], NULL);
+	for(int i = 0; i < numConsumers; i++) {\
 		pthread_join(consumer_tids[i], NULL);
 	}
 	

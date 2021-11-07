@@ -63,11 +63,13 @@ void *producer(void *arg){
     counter++;
   }
 
-  printLinkedList(head);
+  // SEND EOF MESSAGE
 
-  // Send data to the shared queue
-  // When reaching the end of the file, send EOF message
+
+
+  //printLinkedList(head);
   
   // Cleanup and exit
+  fclose(fp);
   return NULL; 
 }
