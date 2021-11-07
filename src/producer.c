@@ -10,13 +10,9 @@ FILE* logFile;
 
 void printLinkedList(packet* head){
   packet* temp = head->next;
-  //printf("mem address of head in func: %p\n", head);
   int counter = 1;
   while(temp != NULL){
     printf("%s", temp->transactions);
-    // if(counter % 10 == 0){
-    //   printf("Mem address of node %d in func: %p\n", counter, temp);
-    // }
     counter++;
     temp = temp->next;
   }
@@ -48,12 +44,10 @@ void *producer(void *arg){
   int counter = 0;
   while(getLineFromFile(fp, curLine, chunkSize) != -1){
     packet* newNode = (packet*) malloc(sizeof(packet));
-    newNode->transactions = curLine;
+    newNode->transactions = (char*) malloc(chunkSize);
+    strcpy(newNode->transactions, curLine);
     newNode->next = NULL;
     temp->next = newNode;
-    // if(counter % 10 == 0){
-    //   printf("Mem address of node %d: %p\n", counter, temp->next);
-    // }
     temp = newNode;
 
     // Write to log file
@@ -61,23 +55,10 @@ void *producer(void *arg){
 		  fprintf(logFile, "producer: line %d\n", counter);
       fflush(logFile);
 	  }
-
-    //printf("Transactions for node %d: %s", counter, temp->transactions);
     counter++;
   }
 
-  temp = head->next;
-  //printf("%p\n", temp);
-  //printf("mem address of head in func: %p\n", head);
-  while(temp != NULL){
-    //printf("%s\n", temp->transactions);
-    // if(counter % 10 == 0){
-    //   printf("Mem address of node %d in func: %p\n", counter, temp);
-    // }
-    temp = temp->next;
-  }
-
-  // printLinkedList(head);
+  printLinkedList(head);
 
   // Send data to the shared queue
   // When reaching the end of the file, send EOF message

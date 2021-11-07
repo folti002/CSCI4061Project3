@@ -65,6 +65,6 @@ extern int queueSize;
 
 extern FILE* logFile;
 
-extern sem_t mutex;
+extern pthread_mutex_t  mutex;
 
 #endif

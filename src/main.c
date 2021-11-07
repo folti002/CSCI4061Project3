@@ -26,7 +26,7 @@ void writeBalanceToFiles(void) {
 	}
 
 	// Write total balance change and close file
-	fprintf(results, "All: %lf\n", assetsChange);
+	fprintf(results, "All:\t%lf\n", assetsChange);
 	fclose(results);
 }
 
@@ -86,7 +86,6 @@ int main(int argc, char *argv[]){
 	if(pthread_create(&producer_tid, NULL, producer, (void*) inputFile) != 0){
 		printf("Producer thread failed to create\n");
 	}
-	printf("Producer thread created successfully\n");
 
 	// Initialize consumer thread IDs and array of consumer IDs
 	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
@@ -100,7 +99,6 @@ int main(int argc, char *argv[]){
 		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &consumerIDs[i]) != 0){
 			printf("Consumer thread %d failed to create\n", i);
 		}
-		//printf("Consumer thread %d created successfully\n", i);
 	}
 
 	// Wait for producer thread to complete
@@ -126,9 +124,11 @@ int main(int argc, char *argv[]){
 	packet* behind = head;
 	while(temp != NULL){
 		temp = temp->next;
+		free(behind->transactions);
 		free(behind);
 		behind = temp;
 	}
+	free(behind->transactions);
 	free(behind);
 	
 	return 0; 
