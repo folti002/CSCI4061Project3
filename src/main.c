@@ -10,17 +10,24 @@ packet* head;
 int runOption;
 int queueSize;
 double balance[acctsNum];
+FILE* logFile;
 
 /**
  * Write final balance to a single file.
  * The path name should be output/result.txt
  */
 void writeBalanceToFiles(void) {
-	// TODO: Write balance for each customer 
-	
+	// Write balance for each customer to output file
+	FILE* results = fopen("output/result.txt", "w");
+	double assetsChange = 0.0;
+	for(int i = 0; i < acctsNum; i++){
+		fprintf(results, "%d\t%lf\n", i, balance[i]);
+		assetsChange += balance[i];
+	}
 
-	// TODO: Write total balance change
-
+	// Write total balance change and close file
+	fprintf(results, "All: %lf\n", assetsChange);
+	fclose(results);
 }
 
 int main(int argc, char *argv[]){
@@ -37,12 +44,18 @@ int main(int argc, char *argv[]){
 
 	// Set run option to the approprate value based on argument inputted
 	// Additionally, store the inputted queue size in the extern variable
-	if(argc == 5){
+	if(argc == 4){
 		char* option = argv[3];
 		if(strcmp(option, "-p") == 0){
 			runOption = 1;
-			FILE* fp = fopen("output/log.txt", "w");
-		} else if(strcmp(option, "-b") == 0){
+			logFile = fopen("output/log.txt", "w");
+		} else {
+			fprintf(stderr, "ERROR: Invalid option inputted\n");
+			exit(EXIT_FAILURE);
+		}
+	} else if(argc == 5){
+		char* option = argv[3];
+		if(strcmp(option, "-b") == 0){
 			runOption = 2;
 			queueSize = atoi(argv[4]);
 		} else if(strcmp(option, "-bp") == 0){
@@ -61,27 +74,30 @@ int main(int argc, char *argv[]){
 	// Initialize shared data queue
 	head = (packet*) malloc(sizeof(packet));
 	head->next = NULL;
+	//printf("mem address of head in main: %p\n", head);
 
 	// Initialize balance array to all zeroes
 	for(int i = 0; i < acctsNum; i++){
 		balance[i] = 0;
 	}
 	
-	// Create producer thread
+	// Create producer thread and write to log file if necessary
 	pthread_t producer_tid;
 	if(pthread_create(&producer_tid, NULL, producer, (void*) inputFile) != 0){
 		printf("Producer thread failed to create\n");
 	}
 	printf("Producer thread created successfully\n");
 
-	// Create consumer threads
+	// Initialize consumer thread IDs and array of consumer IDs
 	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
+	int* consumerIDs = (int*) malloc(sizeof(int) * numConsumers);
 	for(int i = 0; i < numConsumers; i++){
-		consumer_tids[i] = i;
+		consumerIDs[i] = i;
 	}
 
+	// Create consumer threads
 	for(int i = 0; i < numConsumers; i++){
-		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &consumer_tids[i]) != 0){
+		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &consumerIDs[i]) != 0){
 			printf("Consumer thread %d failed to create\n", i);
 		}
 		//printf("Consumer thread %d created successfully\n", i);
@@ -99,8 +115,11 @@ int main(int argc, char *argv[]){
 	// Write the final output
 	writeBalanceToFiles();
 
-	// Free malloc'd variables
+	// Free malloc'd variables and close files
 	free(consumer_tids);
+	if(runOption == 1 || runOption == 3){
+		fclose(logFile);
+	}
 
 	// Free shared queue
 	packet* temp = head->next;
@@ -110,6 +129,7 @@ int main(int argc, char *argv[]){
 		free(behind);
 		behind = temp;
 	}
+	free(behind);
 	
 	return 0; 
 }

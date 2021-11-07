@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -61,5 +62,9 @@ extern packet* head;
 /* Additional global shared variables */
 extern int runOption;
 extern int queueSize;
+
+extern FILE* logFile;
+
+extern sem_t mutex;
 
 #endif

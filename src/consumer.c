@@ -7,6 +7,8 @@
 #include "consumer.h"
 #include <ctype.h>
 
+FILE* logFile;
+
 /**
  * Parse lines from the queue, calculate balance change
  * and update to global array
@@ -24,7 +26,11 @@ void parse(char *line){
 // consumer function
 void *consumer(void *arg){
 	int consumerID = *(int*) arg;
-	printf("consumer %d\n", consumerID);
+	if(runOption == 1 || runOption == 3){
+		fprintf(logFile, "consumer %d\n", consumerID);
+    fflush(logFile);
+	}
+
 	// TODO: Keep reading from queue and process the data
 	// Feel free to change
 	// while(1){
