@@ -46,12 +46,11 @@ void *producer(void *arg){
     newNode->transactions = (char*) malloc(chunkSize);
     strcpy(newNode->transactions, curLine);
     newNode->next = NULL;
+    newNode->eof = 0;
+    newNode->lineNumber = counter;
     
-    // Lock before directly accessing the shared queue
-    pthread_mutex_lock(&sharedQueueLock);
     temp->next = newNode;
-    pthread_cond_signal(&cond);
-    pthread_mutex_unlock(&sharedQueueLock);
+    sem_post(&sem);
 
     temp = newNode;
 
@@ -63,11 +62,20 @@ void *producer(void *arg){
     counter++;
   }
 
-  printLinkedList(head);
+  // Send EOF message
+  if(runOption == 1 || runOption == 3){
+    fprintf(logFile, "producer: line -1\n");
+    fflush(logFile);
+  }
+  packet* eofNode = (packet*) malloc(sizeof(packet));
+  eofNode->eof = 1;
+  eofNode->next = NULL;
+  eofNode->transactions = NULL;
+  temp->next = eofNode;
 
-  // Send data to the shared queue
-  // When reaching the end of the file, send EOF message
+  //printLinkedList(head);
   
   // Cleanup and exit
+  fclose(fp);
   return NULL; 
 }

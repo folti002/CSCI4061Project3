@@ -55,6 +55,8 @@ void bookeepingCode();
 typedef struct packet {
   char* transactions;
   struct packet* next;
+  int lineNumber; // Number of line in input file
+  int eof; // 1 if true, 0 if false
 } packet;
 
 extern packet* head;
@@ -67,5 +69,8 @@ extern FILE* logFile;
 
 extern pthread_mutex_t sharedQueueLock;
 extern pthread_cond_t cond;
+extern pthread_mutex_t balanceLock;
+
+extern sem_t sem;
 
 #endif
