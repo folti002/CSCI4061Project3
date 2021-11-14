@@ -14,6 +14,8 @@ FILE* logFile;
 
 pthread_mutex_t sharedQueueLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t balanceLock = PTHREAD_MUTEX_INITIALIZER;
+sem_t sem;
 
 /**
  * Write final balance to a single file.
@@ -35,6 +37,10 @@ void writeBalanceToFiles(void) {
 
 int main(int argc, char *argv[]){
 	bookeepingCode();
+
+
+
+	// READ USER INPUT AND PREPARE PROGRAM
 
 	// If the argument count isn't between 3 and 5, let user know and exit the program
 	if(argc < 3 || argc > 5){
@@ -73,6 +79,10 @@ int main(int argc, char *argv[]){
 		runOption = 0;
 	}
 
+
+
+	// INITIALIZATION OF SHARED DATA
+
 	// Initialize shared data queue
 	head = (packet*) malloc(sizeof(packet));
 	head->next = NULL;
@@ -81,6 +91,13 @@ int main(int argc, char *argv[]){
 	for(int i = 0; i < acctsNum; i++){
 		balance[i] = 0;
 	}
+
+	// Initialize the semaphore to control access to the shared queue
+	sem_init(&sem, 0, 0);
+
+
+
+	// CREATION OF THREADS
 	
 	// Create producer thread and write to log file if necessary
 	pthread_t producer_tid;
@@ -89,12 +106,11 @@ int main(int argc, char *argv[]){
 	}
 
 	// Initialize consumer thread IDs and array of consumer IDs
-	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) *numConsumers);
+	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) * numConsumers);
 	int* consumerIDs = (int*) malloc(sizeof(int) * numConsumers);
 	for(int i = 0; i < numConsumers; i++){
 		consumerIDs[i] = i;
 	}
-
 	// Create consumer threads
 	for(int i = 0; i < numConsumers; i++){
 		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &consumerIDs[i]) != 0){
@@ -102,24 +118,34 @@ int main(int argc, char *argv[]){
 		}
 	}
 
+
+
+	// WAITING FOR THREADS
+
 	// Wait for producer thread to complete
 	pthread_join(producer_tid, NULL);
 
 	// Wait for consumer threads to complete
-	for(int i = 0; i < numConsumers; i++) {\
+	for(int i = 0; i < numConsumers; i++) {
 		pthread_join(consumer_tids[i], NULL);
 	}
+
+
+
+	// WRITING OUTPUT AND CLEAN-UP
 	
 	// Write the final output
 	writeBalanceToFiles();
 
 	// Free malloc'd variables and close files
 	free(consumer_tids);
+	free(consumerIDs);
 	if(runOption == 1 || runOption == 3){
 		fclose(logFile);
 	}
 
 	// Free shared queue
+	// THIS NEEDS TO OCCUR IN CONSUMER WHILE IT IS READING FROM THE QUEUE
 	packet* temp = head->next;
 	packet* behind = head;
 	while(temp != NULL){
