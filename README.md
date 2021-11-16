@@ -1,26 +1,19 @@
 # CSCI 4061 Project 3 - Multithreading
 
-* Lab machine name used to test your program
-* Project group number, group member names and x500 addresses
-* Whether to complete the extra task
-* Members’ individual contributions
-* Any assumptions outside this document
-* How to compile and run your program
-
 ## Project Group Number: 27  
 
 Reed Fazenbaker (fazen007)  
 Mikkel Folting (folti002)  
+Note: the extra credit portion of this project was attempted.
 
 ## Contributions
 
-Mikkel Folting: Worked on 
-Reed Fazenbaker: Worked on
+Mikkel Folting: Worked on producer-consumer synchronization, shared queue implementation, and consumer reading of packets  
+Reed Fazenbaker: Worked on main.c, initializing mutual exclusion variables, initializing threads, and parsing data
 
 ## Assumptions
 
 No significant assumptions were made outside the project specification.  
-Note: the extra credit portion of this project was completed.
 
 ## Compiling the program
 
@@ -53,5 +46,5 @@ The program can also be run in 3 additional modes, specified with the option inp
 
 test machine: csel-kh1250-01.cselabs.umn.edu  
 group number: G[27]  
-name: Reed Fazenbaker, Mikkel Folting  
+names: Reed Fazenbaker, Mikkel Folting  
 x500: fazen007, folti002

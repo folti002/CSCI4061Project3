@@ -53,8 +53,8 @@ void bookeepingCode();
 
 /* packet struct definition */
 typedef struct packet {
-  char* transactions;
-  struct packet* next;
+  char* transactions; // String containing the transactions for the current customer
+  struct packet* next; // Pointer to next packet in queue
   int lineNumber; // Number of line in input file
   int eof; // 1 if true, 0 if false
 } packet;

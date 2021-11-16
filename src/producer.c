@@ -58,7 +58,7 @@ void *producer(void *arg){
       sem_wait(&slots);
     }
     
-    // Wait to grab hold of the mutex and then add 
+    // Grab hold of the mutex, add a new node to the queue, and let the consumer know
     sem_wait(&mut);
     if(head == NULL){
       head = newNode;
@@ -81,16 +81,19 @@ void *producer(void *arg){
 
   // Send nodes indicating an end of file into the queue
   for(int i = 0; i < numConsumers; i++){
+    // Set up an eof node
     packet* eofNode = (packet*) malloc(sizeof(packet));
     eofNode->eof = 1;
     eofNode->next = NULL;
     eofNode->transactions = (char*) malloc(chunkSize);
     strcpy(eofNode->transactions, "eof node\n");
 
+    // Wait until there is enough space in the queue to continue
     if(runOption == 2 || runOption == 3){
       sem_wait(&slots);
     }
-    
+
+    // Grab the mutex and add to the queue and let the consumer know
     sem_wait(&mut);
     if(head == NULL){
       head = eofNode;

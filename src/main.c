@@ -36,7 +36,7 @@ void writeBalanceToFiles(void) {
 	}
 
 	// Write total balance change and close file
-	fprintf(results, "All:\t%lf\n", assetsChange);
+	fprintf(results, "All: \t%lf\n", assetsChange);
 	fflush(results);
 	fclose(results);
 }
