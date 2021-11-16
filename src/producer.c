@@ -6,13 +6,21 @@
 
 #include "producer.h"
 
+packet* tail;
+packet* head;
+
+int numConsumers;
 FILE* logFile;
 pthread_mutex_t sharedQueueLock;
 pthread_cond_t cond;
 
+sem_t bufferSem;
+sem_t mut;
+sem_t slots;
+
 // Helper method to check if linked list holds the correct information
-void printLinkedList(packet* head){
-  packet* temp = head->next;
+void printLinkedList(packet* startNode){
+  packet* temp = startNode;
   while(temp != NULL){
     printf("%s", temp->transactions);
     temp = temp->next;
@@ -39,20 +47,27 @@ void *producer(void *arg){
 
   // Read file line by line and send data to the shared queue
   char curLine[chunkSize];
-  packet* temp = head;
   int counter = 0;
   while(getLineFromFile(fp, curLine, chunkSize) != -1){
     packet* newNode = (packet*) malloc(sizeof(packet));
-    newNode->transactions = (char*) malloc(chunkSize);
+    newNode->transactions = (char*) malloc(sizeof(char) * chunkSize);
     strcpy(newNode->transactions, curLine);
     newNode->next = NULL;
     newNode->eof = 0;
     newNode->lineNumber = counter;
     
-    temp->next = newNode;
-    sem_post(&sem);
+    //sem_wait(&slots);
+    sem_wait(&mut);
+    if(counter == 0){
+      head = newNode;
+      tail = newNode;
+      sem_post(&preventConsumerFromRunningFirst);
+    }
 
-    temp = newNode;
+    head->next = newNode;
+    head = head->next;
+    sem_post(&mut);
+    sem_post(&bufferSem);
 
     // Write progress of producer to log file
     if(runOption == 1 || runOption == 3){
@@ -67,14 +82,23 @@ void *producer(void *arg){
     fprintf(logFile, "producer: line -1\n");
     fflush(logFile);
   }
-  packet* eofNode = (packet*) malloc(sizeof(packet));
-  eofNode->eof = 1;
-  eofNode->next = NULL;
-  eofNode->transactions = NULL;
-  temp->next = eofNode;
 
-  //printLinkedList(head);
+  for(int i = 0; i < numConsumers; i++){
+    packet* eofNode = (packet*) malloc(sizeof(packet));
+    eofNode->eof = 1;
+    eofNode->next = NULL;
+    eofNode->transactions = (char*) malloc(chunkSize);
+    strcpy(eofNode->transactions, "eof babyyyyyy");
+    //sem_wait(&slots);
+    sem_wait(&mut);
+    head->next = eofNode;
+    head = eofNode;
+    sem_post(&mut);
+    sem_post(&bufferSem);
+  }
   
+  //printLinkedList(tail);
+
   // Cleanup and exit
   fclose(fp);
   return NULL; 
