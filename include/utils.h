@@ -59,26 +59,18 @@ typedef struct packet {
   int eof; // 1 if true, 0 if false
 } packet;
 
+/* additional global shared variables */
 extern packet* head;
 extern packet* tail;
-
-/* Additional global shared variables */
 extern int runOption;
 extern int queueSize;
 extern int numConsumers;
-
 extern FILE* logFile;
 
-extern pthread_mutex_t sharedQueueLock;
-extern pthread_cond_t cond;
-
+/* mutex and semaphores */
 extern pthread_mutex_t balanceLock; // Used to protect access to global balance array
-
 extern sem_t bufferSem; // Used to let producer signal consumer when a line is added to the queue
 extern sem_t mut; // Used for mutual exclusion when accessing shared queue
 extern sem_t slots; // Used for upper bound on queue size
-extern sem_t preventConsumerFromRunningFirst;
-
-
 
 #endif

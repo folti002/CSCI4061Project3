@@ -6,6 +6,7 @@
 
 #include "header.h"
 
+// Redeclare extern global variables
 packet* head;
 packet* tail;
 int runOption;
@@ -14,13 +15,11 @@ int numConsumers;
 double balance[acctsNum];
 FILE* logFile;
 
-pthread_mutex_t sharedQueueLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+// Redeclare mutex and semaphores
 pthread_mutex_t balanceLock = PTHREAD_MUTEX_INITIALIZER;
 sem_t bufferSem;
 sem_t mut;
 sem_t slots;
-sem_t preventConsumerFromRunningFirst;
 
 /**
  * Write final balance to a single file.
@@ -78,6 +77,11 @@ int main(int argc, char *argv[]){
 		} else if(strcmp(option, "-bp") == 0){
 			runOption = 3;
 			queueSize = atoi(argv[4]);
+			if(queueSize <= 0){
+				fprintf(stderr, "ERROR: Please input a queue size of 1 or greater\n");
+				exit(EXIT_FAILURE);
+			}
+			logFile = fopen("output/log.txt", "w");
 		} else {
 			fprintf(stderr, "ERROR: Invalid option inputted\n");
 			exit(EXIT_FAILURE);
@@ -103,8 +107,9 @@ int main(int argc, char *argv[]){
 	// Initialize the semaphore to control access to the shared queue
 	sem_init(&bufferSem, 0, 0); // Allows producer to always run ahead of consumer
 	sem_init(&mut, 0, 1); // Act as a mutex lock
-	//sem_init(&slots, 0, queueSize); // Allow only queueSize amount of items to be in the queue at a time
-	//sem_init(&preventConsumerFromRunningFirst, 0, 0);
+	if(runOption == 2 || runOption == 3){
+		sem_init(&slots, 0, queueSize); // Allow only queueSize amount of items to be in the queue at a time
+	}
 
 
 
@@ -156,18 +161,6 @@ int main(int argc, char *argv[]){
 	if(runOption == 1 || runOption == 3){
 		fclose(logFile);
 	}
-
-	// Free shared queue
-	// THIS NEEDS TO OCCUR IN CONSUMER WHILE IT IS READING FROM THE QUEUE
-	// packet* temp = head->next;
-	// packet* behind = head;
-	// while(temp != NULL){
-	// 	temp = temp->next;
-	// 	free(behind->transactions);
-	// 	free(behind);
-	// 	behind = temp;
-	// }
-	// free(behind);
 	
 	return 0; 
 }

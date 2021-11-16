@@ -18,15 +18,6 @@ sem_t bufferSem;
 sem_t mut;
 sem_t slots;
 
-// Helper method to check if linked list holds the correct information
-void printLinkedList(packet* startNode){
-  packet* temp = startNode;
-  while(temp != NULL){
-    printf("%s", temp->transactions);
-    temp = temp->next;
-  }
-}
-
 /**
  * Producer thread will read from the file and write data to 
  * the end of the shared queue
@@ -56,7 +47,18 @@ void *producer(void *arg){
     newNode->eof = 0;
     newNode->lineNumber = counter;
     
-    //sem_wait(&slots);
+    // Write progress of producer to log file
+    if(runOption == 1 || runOption == 3){
+		  fprintf(logFile, "producer: line %d\n", counter);
+      fflush(logFile);
+	  }
+
+    // Wait until there is enough space in the queue to continue
+    if(runOption == 2 || runOption == 3){
+      sem_wait(&slots);
+    }
+    
+    // Wait to grab hold of the mutex and then add 
     sem_wait(&mut);
     if(head == NULL){
       head = newNode;
@@ -65,15 +67,9 @@ void *producer(void *arg){
     } else {
       tail->next = newNode;
       tail = newNode;
-      //sem_post(&bufferSem);
+      sem_post(&bufferSem);
     }
     sem_post(&mut);
-
-    // Write progress of producer to log file
-    if(runOption == 1 || runOption == 3){
-		  fprintf(logFile, "producer: line %d\n", counter);
-      fflush(logFile);
-	  }
     counter++;
   }
 
@@ -91,6 +87,10 @@ void *producer(void *arg){
     eofNode->transactions = (char*) malloc(chunkSize);
     strcpy(eofNode->transactions, "eof node\n");
 
+    if(runOption == 2 || runOption == 3){
+      sem_wait(&slots);
+    }
+    
     sem_wait(&mut);
     if(head == NULL){
       head = eofNode;
@@ -102,11 +102,7 @@ void *producer(void *arg){
       sem_post(&bufferSem);
     }
     sem_post(&mut);
-    //sem_wait(&slots);
   }
-  tail = NULL;
-
-  //printLinkedList(tail);
 
   // Cleanup and exit
   fclose(fp);

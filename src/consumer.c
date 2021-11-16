@@ -24,8 +24,8 @@ sem_t slots;
  * and update to global array
  */
 void parse(char *line){
-	char* emptyString;
 	// Get customer ID
+	char* emptyString;
 	int id = atoi(strtok_r(line, ",", &emptyString));
 
 	// Sum up transactions for the current customer
@@ -35,8 +35,6 @@ void parse(char *line){
 		balanceChange += strtod(token, NULL);
 		token = strtok_r(NULL, ",", &emptyString);
 	}
-	//printf("id %d: %lf\n", id, balanceChange);
-	//fflush(stdout);
 
 	// Update the global array
 	pthread_mutex_lock(&balanceLock);
@@ -45,6 +43,7 @@ void parse(char *line){
 }
 
 void *consumer(void *arg){
+	// Take in the ID of this specific consumer from input to function and write to log file
 	int consumerID = *(int*) arg;
 	if(runOption == 1 || runOption == 3){
 		fprintf(logFile, "consumer %d\n", consumerID);
@@ -54,60 +53,57 @@ void *consumer(void *arg){
 	// Keep reading from queue and process the data
 	int counter = 0;
 	while(true){
-
-		if(head != NULL){
-			printf("%d %s", head->eof, head->transactions);
-			fflush(stdout);
-		} else {
-			printf("HEAD IS NULL\n");
-			fflush(stdout);
-		}
-
-		while(head == tail){
-			//printf("HI\n");
-			//printf("hello %p\n", head);
-			//fflush(stdout);
-			sem_wait(&bufferSem);
-			//printf("There is stuff to read!\n");
-			//fflush(stdout);
-		}
+		// Grab the mutex but release it if head is still null
+		// Once head isn't null anymore, grab it again and check the condition to make sure
 		sem_wait(&mut);
+		while(head == NULL){
+			sem_post(&mut);
+			sem_wait(&bufferSem);
+			sem_wait(&mut);
+		}
 
-		counter++;
+		// Check if we are dealing with an eof packet or not
 		if(head->eof == 0){
-			//printf("Node with data.\n");
-			//fflush(stdout);
+			// If the current packet isn't an eof packet, call parse on its transactions and write to log file
 			if(runOption == 1 || runOption == 3){
 				fprintf(logFile, "consumer %d: line %d\n", consumerID, head->lineNumber);
 				fflush(logFile);
 			}
-			char *copiedStr = (char *)malloc(sizeof(char) * chunkSize);
+			char* copiedStr = (char*) malloc(sizeof(char) * chunkSize);
 			strcpy(copiedStr, head->transactions);
 			parse(copiedStr);
 			free(copiedStr);
+
+			// Let producer know that another slot has opened up in the queue
+			if(runOption == 2 || runOption == 3){
+				sem_post(&slots);
+			}
 		}	else {
+			// If the current packet is an eof packet, free it and then break from the while loop
 			if(runOption == 1 || runOption == 3){
 				fprintf(logFile, "consumer %d: line -1\n", consumerID);
 				fflush(logFile);
 			}
-			//printf("EOF reached\n");
-			//fflush(stdout);
 			packet* behind = head;
 			head = head->next;
 			free(behind->transactions);
 			free(behind);
+
+			// Let producer know that another slot has opened up in the queue
+			if(runOption == 2 || runOption == 3){
+				sem_post(&slots);
+			}
 			sem_post(&mut);
 			break;
 		}
+
+		// Free the packet we just parsed and give up the mutex lock
 		packet* behind = head;
 		head = head->next;
 		free(behind->transactions);
 		free(behind);
-		//sem_post(&slots);
 		sem_post(&mut);
 	}
-
-	//printf("At the end of consumer\n");
 	
 	return NULL; 
 }
