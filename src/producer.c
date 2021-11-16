@@ -65,7 +65,7 @@ void *producer(void *arg){
     } else {
       tail->next = newNode;
       tail = newNode;
-      // sem_post(&bufferSem);
+      //sem_post(&bufferSem);
     }
     sem_post(&mut);
 
@@ -99,13 +99,13 @@ void *producer(void *arg){
     } else {
       tail->next = eofNode;
       tail = eofNode;
-      // sem_post(&bufferSem);
+      sem_post(&bufferSem);
     }
     sem_post(&mut);
-
     //sem_wait(&slots);
   }
-  
+  tail = NULL;
+
   //printLinkedList(tail);
 
   // Cleanup and exit

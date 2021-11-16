@@ -36,7 +36,7 @@ void parse(char *line){
 		token = strtok_r(NULL, ",", &emptyString);
 	}
 	//printf("id %d: %lf\n", id, balanceChange);
-	fflush(stdout);
+	//fflush(stdout);
 
 	// Update the global array
 	pthread_mutex_lock(&balanceLock);
@@ -55,16 +55,23 @@ void *consumer(void *arg){
 	int counter = 0;
 	while(true){
 
-		//printf("%d %s", head->eof, head->transactions);
-		// while(head == tail){
-		// 	sem_wait(&bufferSem);
-		// }
-
-		sem_wait(&mut);
-		if(head == tail){
-			printf("we should be at the end now\n");
-			break;
+		if(head != NULL){
+			printf("%d %s", head->eof, head->transactions);
+			fflush(stdout);
+		} else {
+			printf("HEAD IS NULL\n");
+			fflush(stdout);
 		}
+
+		while(head == tail){
+			//printf("HI\n");
+			//printf("hello %p\n", head);
+			//fflush(stdout);
+			sem_wait(&bufferSem);
+			//printf("There is stuff to read!\n");
+			//fflush(stdout);
+		}
+		sem_wait(&mut);
 
 		counter++;
 		if(head->eof == 0){
@@ -76,7 +83,6 @@ void *consumer(void *arg){
 			}
 			char *copiedStr = (char *)malloc(sizeof(char) * chunkSize);
 			strcpy(copiedStr, head->transactions);
-			// printf("%s", copiedStr);
 			parse(copiedStr);
 			free(copiedStr);
 		}	else {
@@ -100,6 +106,8 @@ void *consumer(void *arg){
 		//sem_post(&slots);
 		sem_post(&mut);
 	}
+
+	//printf("At the end of consumer\n");
 	
 	return NULL; 
 }

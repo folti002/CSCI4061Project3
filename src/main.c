@@ -114,11 +114,8 @@ int main(int argc, char *argv[]){
 	pthread_t producer_tid;
 	if(pthread_create(&producer_tid, NULL, producer, (void*) inputFile) != 0){
 		printf("Producer thread failed to create\n");
-		fflush(stdout);
+		//fflush(stdout);
 	}
-
-	// REMOVE THIS QPIUWE FHPQUWIEFH
-	pthread_join(producer_tid, NULL);
 
 	// Initialize consumer thread IDs and array of consumer IDs
 	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) * numConsumers);
@@ -130,7 +127,7 @@ int main(int argc, char *argv[]){
 	for(int i = 0; i < numConsumers; i++){
 		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &consumerIDs[i]) != 0){
 			printf("Consumer thread %d failed to create\n", i);
-			fflush(stdout);
+			//fflush(stdout);
 		}
 	}
 
@@ -139,7 +136,7 @@ int main(int argc, char *argv[]){
 	// WAITING FOR THREADS
 
 	// Wait for producer thread to complete
-	//pthread_join(producer_tid, NULL);
+	pthread_join(producer_tid, NULL);
 
 	// Wait for consumer threads to complete
 	for(int i = 0; i < numConsumers; i++) {
