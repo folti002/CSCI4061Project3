@@ -37,7 +37,7 @@ OR
 
 The above commands are both valid to run the program.  
 The number of consumers to create and the input file to read from must be specified.  
-The program can also be run in 3 additional modes, specified with the option input.
+The program can also be run in 3 additional modes, specified with the option input.  
 -b indicates that the program should be run using a bounded buffer, the size of which is specified in the next argument: queue size.  
 -p indicates that the program should log its progress to a file called log.txt in the output folder of the project.  
 -bp indicates that the program should run using a bounded buffer and the progress should be logged to log.txt.  
