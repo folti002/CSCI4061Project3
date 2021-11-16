@@ -7,15 +7,20 @@
 #include "header.h"
 
 packet* head;
+packet* tail;
 int runOption;
 int queueSize;
+int numConsumers;
 double balance[acctsNum];
 FILE* logFile;
 
 pthread_mutex_t sharedQueueLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t balanceLock = PTHREAD_MUTEX_INITIALIZER;
-sem_t sem;
+sem_t bufferSem;
+sem_t mut;
+sem_t slots;
+sem_t preventConsumerFromRunningFirst;
 
 /**
  * Write final balance to a single file.
@@ -27,11 +32,13 @@ void writeBalanceToFiles(void) {
 	double assetsChange = 0.0;
 	for(int i = 0; i < acctsNum; i++){
 		fprintf(results, "%d\t%lf\n", i, balance[i]);
+		fflush(results);
 		assetsChange += balance[i];
 	}
 
 	// Write total balance change and close file
 	fprintf(results, "All:\t%lf\n", assetsChange);
+	fflush(results);
 	fclose(results);
 }
 
@@ -49,7 +56,7 @@ int main(int argc, char *argv[]){
 	}
 
 	// Store number of consumers and the input file to use
-	int numConsumers = atoi(argv[1]);
+	numConsumers = atoi(argv[1]);
 	char* inputFile = argv[2];
 
 	// Set run option to the approprate value based on argument inputted
@@ -84,8 +91,9 @@ int main(int argc, char *argv[]){
 	// INITIALIZATION OF SHARED DATA
 
 	// Initialize shared data queue
-	head = (packet*) malloc(sizeof(packet));
-	head->next = NULL;
+	tail = (packet*) malloc(sizeof(packet));
+	tail = NULL;
+	head = NULL;
 
 	// Initialize balance array to all zeroes
 	for(int i = 0; i < acctsNum; i++){
@@ -93,7 +101,10 @@ int main(int argc, char *argv[]){
 	}
 
 	// Initialize the semaphore to control access to the shared queue
-	sem_init(&sem, 0, 0);
+	sem_init(&bufferSem, 0, 0); // Allows producer to always run ahead of consumer
+	sem_init(&mut, 0, 1); // Act as a mutex lock
+	//sem_init(&slots, 0, queueSize); // Allow only queueSize amount of items to be in the queue at a time
+	//sem_init(&preventConsumerFromRunningFirst, 0, 0);
 
 
 
@@ -103,7 +114,11 @@ int main(int argc, char *argv[]){
 	pthread_t producer_tid;
 	if(pthread_create(&producer_tid, NULL, producer, (void*) inputFile) != 0){
 		printf("Producer thread failed to create\n");
+		fflush(stdout);
 	}
+
+	// REMOVE THIS QPIUWE FHPQUWIEFH
+	pthread_join(producer_tid, NULL);
 
 	// Initialize consumer thread IDs and array of consumer IDs
 	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) * numConsumers);
@@ -115,6 +130,7 @@ int main(int argc, char *argv[]){
 	for(int i = 0; i < numConsumers; i++){
 		if(pthread_create(&(consumer_tids[i]), NULL, consumer, (void*) &consumerIDs[i]) != 0){
 			printf("Consumer thread %d failed to create\n", i);
+			fflush(stdout);
 		}
 	}
 
@@ -123,7 +139,7 @@ int main(int argc, char *argv[]){
 	// WAITING FOR THREADS
 
 	// Wait for producer thread to complete
-	pthread_join(producer_tid, NULL);
+	//pthread_join(producer_tid, NULL);
 
 	// Wait for consumer threads to complete
 	for(int i = 0; i < numConsumers; i++) {
@@ -146,15 +162,15 @@ int main(int argc, char *argv[]){
 
 	// Free shared queue
 	// THIS NEEDS TO OCCUR IN CONSUMER WHILE IT IS READING FROM THE QUEUE
-	packet* temp = head->next;
-	packet* behind = head;
-	while(temp != NULL){
-		temp = temp->next;
-		free(behind->transactions);
-		free(behind);
-		behind = temp;
-	}
-	free(behind);
+	// packet* temp = head->next;
+	// packet* behind = head;
+	// while(temp != NULL){
+	// 	temp = temp->next;
+	// 	free(behind->transactions);
+	// 	free(behind);
+	// 	behind = temp;
+	// }
+	// free(behind);
 	
 	return 0; 
 }
