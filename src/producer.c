@@ -58,16 +58,16 @@ void *producer(void *arg){
     
     //sem_wait(&slots);
     sem_wait(&mut);
-    if(counter == 0){
+    if(head == NULL){
       head = newNode;
       tail = newNode;
-      sem_post(&preventConsumerFromRunningFirst);
+      sem_post(&bufferSem);
+    } else {
+      tail->next = newNode;
+      tail = newNode;
+      // sem_post(&bufferSem);
     }
-
-    head->next = newNode;
-    head = head->next;
     sem_post(&mut);
-    sem_post(&bufferSem);
 
     // Write progress of producer to log file
     if(runOption == 1 || runOption == 3){
@@ -83,18 +83,27 @@ void *producer(void *arg){
     fflush(logFile);
   }
 
+  // Send nodes indicating an end of file into the queue
   for(int i = 0; i < numConsumers; i++){
     packet* eofNode = (packet*) malloc(sizeof(packet));
     eofNode->eof = 1;
     eofNode->next = NULL;
     eofNode->transactions = (char*) malloc(chunkSize);
-    strcpy(eofNode->transactions, "eof babyyyyyy");
-    //sem_wait(&slots);
+    strcpy(eofNode->transactions, "eof node\n");
+
     sem_wait(&mut);
-    head->next = eofNode;
-    head = eofNode;
+    if(head == NULL){
+      head = eofNode;
+      tail = eofNode;
+      sem_post(&bufferSem);
+    } else {
+      tail->next = eofNode;
+      tail = eofNode;
+      // sem_post(&bufferSem);
+    }
     sem_post(&mut);
-    sem_post(&bufferSem);
+
+    //sem_wait(&slots);
   }
   
   //printLinkedList(tail);

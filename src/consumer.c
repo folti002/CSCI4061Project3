@@ -24,23 +24,23 @@ sem_t slots;
  * and update to global array
  */
 void parse(char *line){
+	char* emptyString;
 	// Get customer ID
-	int id = atoi(strtok(line, ","));
+	int id = atoi(strtok_r(line, ",", &emptyString));
 
 	// Sum up transactions for the current customer
 	double balanceChange = 0.0;
-	char* emptyString;
-	char* token = strtok_r(NULL, ",", emptyString);
+	char* token = strtok_r(NULL, ",", &emptyString);
 	while(token != NULL){
 		balanceChange += strtod(token, NULL);
-		token = strtok_r(NULL, ",", emptyString);
+		token = strtok_r(NULL, ",", &emptyString);
 	}
 	//printf("id %d: %lf\n", id, balanceChange);
 	fflush(stdout);
 
 	// Update the global array
 	pthread_mutex_lock(&balanceLock);
-	balance[id] = balanceChange;
+	balance[id] += balanceChange;
 	pthread_mutex_unlock(&balanceLock);
 }
 
@@ -52,52 +52,53 @@ void *consumer(void *arg){
 	}
 	
 	// Keep reading from queue and process the data
-	// sem_wait(&bufferSem);
-	// sem_wait(&mut);
 	int counter = 0;
 	while(true){
-		while(head == NULL){
-			sem_wait(&preventConsumerFromRunningFirst);
-		}
 
-		while(head == tail){
-			sem_wait(&bufferSem);
-		}
+		//printf("%d %s", head->eof, head->transactions);
+		// while(head == tail){
+		// 	sem_wait(&bufferSem);
+		// }
+
 		sem_wait(&mut);
-
-
-		if(tail == NULL){
-			printf("HIIII %p %d\n", tail, counter);
+		if(head == tail){
+			printf("we should be at the end now\n");
 			break;
 		}
 
-		printf("%d %s", tail->eof, tail->transactions);
-
 		counter++;
-		if(tail->eof != 1){
+		if(head->eof == 0){
 			//printf("Node with data.\n");
-			fflush(stdout);
+			//fflush(stdout);
 			if(runOption == 1 || runOption == 3){
-				fprintf(logFile, "consumer %d: line %d\n", consumerID, tail->lineNumber);
+				fprintf(logFile, "consumer %d: line %d\n", consumerID, head->lineNumber);
 				fflush(logFile);
 			}
-			parse(tail->transactions);
+			char *copiedStr = (char *)malloc(sizeof(char) * chunkSize);
+			strcpy(copiedStr, head->transactions);
+			// printf("%s", copiedStr);
+			parse(copiedStr);
+			free(copiedStr);
 		}	else {
 			if(runOption == 1 || runOption == 3){
 				fprintf(logFile, "consumer %d: line -1\n", consumerID);
 				fflush(logFile);
 			}
-			printf("EOF reached\n");
-			fflush(stdout);
+			//printf("EOF reached\n");
+			//fflush(stdout);
+			packet* behind = head;
+			head = head->next;
+			free(behind->transactions);
+			free(behind);
 			sem_post(&mut);
 			break;
 		}
-		packet* behind = tail;
-		tail = tail->next;
+		packet* behind = head;
+		head = head->next;
 		free(behind->transactions);
 		free(behind);
-		sem_post(&mut);
 		//sem_post(&slots);
+		sem_post(&mut);
 	}
 	
 	return NULL; 

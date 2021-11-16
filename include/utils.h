@@ -77,7 +77,8 @@ extern pthread_mutex_t balanceLock; // Used to protect access to global balance 
 extern sem_t bufferSem; // Used to let producer signal consumer when a line is added to the queue
 extern sem_t mut; // Used for mutual exclusion when accessing shared queue
 extern sem_t slots; // Used for upper bound on queue size
-
 extern sem_t preventConsumerFromRunningFirst;
+
+
 
 #endif

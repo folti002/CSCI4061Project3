@@ -91,7 +91,8 @@ int main(int argc, char *argv[]){
 	// INITIALIZATION OF SHARED DATA
 
 	// Initialize shared data queue
-	head = (packet*) malloc(sizeof(packet));
+	tail = (packet*) malloc(sizeof(packet));
+	tail = NULL;
 	head = NULL;
 
 	// Initialize balance array to all zeroes
@@ -103,7 +104,7 @@ int main(int argc, char *argv[]){
 	sem_init(&bufferSem, 0, 0); // Allows producer to always run ahead of consumer
 	sem_init(&mut, 0, 1); // Act as a mutex lock
 	//sem_init(&slots, 0, queueSize); // Allow only queueSize amount of items to be in the queue at a time
-	sem_init(&preventConsumerFromRunningFirst, 0, 0);
+	//sem_init(&preventConsumerFromRunningFirst, 0, 0);
 
 
 
@@ -115,6 +116,9 @@ int main(int argc, char *argv[]){
 		printf("Producer thread failed to create\n");
 		fflush(stdout);
 	}
+
+	// REMOVE THIS QPIUWE FHPQUWIEFH
+	pthread_join(producer_tid, NULL);
 
 	// Initialize consumer thread IDs and array of consumer IDs
 	pthread_t* consumer_tids = (pthread_t*) malloc(sizeof(pthread_t) * numConsumers);
@@ -135,7 +139,7 @@ int main(int argc, char *argv[]){
 	// WAITING FOR THREADS
 
 	// Wait for producer thread to complete
-	pthread_join(producer_tid, NULL);
+	//pthread_join(producer_tid, NULL);
 
 	// Wait for consumer threads to complete
 	for(int i = 0; i < numConsumers; i++) {
