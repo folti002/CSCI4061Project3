@@ -30,13 +30,13 @@ void writeBalanceToFiles(void) {
 	FILE* results = fopen("output/result.txt", "w");
 	double assetsChange = 0.0;
 	for(int i = 0; i < acctsNum; i++){
-		fprintf(results, "%d\t%lf\n", i, balance[i]);
+		fprintf(results, "%d\t%lf\r\n", i, balance[i]);
 		fflush(results);
 		assetsChange += balance[i];
 	}
 
 	// Write total balance change and close file
-	fprintf(results, "All: \t%lf\n", assetsChange);
+	fprintf(results, "All: \t%lf\r\n", assetsChange);
 	fflush(results);
 	fclose(results);
 }
